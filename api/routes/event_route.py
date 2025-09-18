@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from request_model import EventCreate
-from utils.db import events_collection
+from api.utils.db import events_collection
 from bson.objectid import ObjectId
 from fastapi import UploadFile, File, Form
 import shutil

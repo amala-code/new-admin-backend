@@ -3,9 +3,9 @@ import hashlib
 import hmac
 from fastapi import HTTPException
 
-from conf import RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, client
-from model.payment_model import OrderRequest, PaymentResponse, PaymentVerification
-from utils.db import members_collection
+from api.conf import RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, client
+from api.model.payment_model import OrderRequest, PaymentResponse, PaymentVerification
+from api.utils.db import members_collection
 
 class PaymentService:
     

@@ -3,10 +3,10 @@ import uvicorn
 from fastapi.responses import JSONResponse
 from fastapi import FastAPI, APIRouter, status
 from fastapi.middleware.cors import CORSMiddleware
-import routes.login_route as login
-import routes.member_route as member 
-import routes.event_route as event
-import routes.subscription_routes as subscription
+import api.routes.login_route as login
+import api.routes.member_route as member 
+import api.routes.event_route as event
+import api.routes.subscription_routes as subscription
 from fastapi.staticfiles import StaticFiles
 
 

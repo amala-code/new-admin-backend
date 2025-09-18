@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
-from model.payment_model import OrderRequest, PaymentResponse, PaymentVerification
-from services.payment_service import PaymentService
+from api.model.payment_model import OrderRequest, PaymentResponse, PaymentVerification
+from api.services.payment_service import PaymentService
 
 router = APIRouter()
 payment_service = PaymentService()

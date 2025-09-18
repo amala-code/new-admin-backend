@@ -2,8 +2,8 @@ from bson import ObjectId
 from fastapi import Depends, HTTPException, APIRouter, Body, Path,Query
 from pydantic import BaseModel
 from typing import Optional
-from model.member_model import Member, MemberUpdate, NonMember
-from utils.db import members_collection, non_members_collection
+from api.model.member_model import Member, MemberUpdate, NonMember
+from api.utils.db import members_collection, non_members_collection
 
 router = APIRouter()
 

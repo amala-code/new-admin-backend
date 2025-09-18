@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter
 from pydantic import  EmailStr
 from typing import Optional
-from conf import SECRET_KEY,DB_PASSWORD,DB_USERNAME
-from utils.db import pwd_context,ALGORITHM,ACCESS_TOKEN_EXPIRE_MINUTES
+from api.conf import SECRET_KEY,DB_PASSWORD,DB_USERNAME
+from api.utils.db import pwd_context,ALGORITHM,ACCESS_TOKEN_EXPIRE_MINUTES
 router = APIRouter()
 
 

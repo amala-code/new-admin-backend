@@ -1,10 +1,10 @@
 import jwt
 from fastapi import Depends, HTTPException, APIRouter
 from bson.objectid import ObjectId
-from conf import SECRET_KEY
-from request_model import User, UserCreate, Token
-from services.login_service import create_access_token, hash_password, verify_password
-from utils.db import users_collection, oauth2_scheme,ALGORITHM
+from api.conf import SECRET_KEY
+from api.request_model import User, UserCreate, Token
+from api.services.login_service import create_access_token, hash_password, verify_password
+from api.utils.db import users_collection, oauth2_scheme,ALGORITHM
 
 router = APIRouter()
 
