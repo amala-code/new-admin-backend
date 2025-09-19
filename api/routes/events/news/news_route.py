@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional
-from utils.db import news_collection
+from api.utils.db import news_collection
 router = APIRouter()
 
 class NewsCreateRequest(BaseModel):

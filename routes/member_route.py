@@ -215,7 +215,7 @@ from fastapi import Request, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 from api.conf import SECRET_KEY
-from utils.db import ALGORITHM
+from api.utils.db import ALGORITHM
 
 security = HTTPBearer()
 

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from request_model import EventCreate
+from api.request_model import EventCreate
 from api.utils.db import events_collection
 from bson.objectid import ObjectId
 from fastapi import UploadFile, File, Form

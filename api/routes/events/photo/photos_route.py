@@ -9,7 +9,7 @@ import shutil
 import uuid
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from utils.db import photos_collection
+from api.utils.db import photos_collection
 
 router = APIRouter()
 
