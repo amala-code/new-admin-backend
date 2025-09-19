@@ -215,7 +215,7 @@ async def get_member_by_id(id: str = Path(...)):
 from fastapi import Request, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
-from conf import SECRET_KEY
+from api.conf import SECRET_KEY
 from utils.db import ALGORITHM
 
 security = HTTPBearer()
