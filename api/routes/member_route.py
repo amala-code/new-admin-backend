@@ -12,7 +12,7 @@ class PhoneLookup(BaseModel):
     phone: str
 
 
-MEMBER_ID_COUNTER = 2000
+MEMBER_ID_COUNTER = 1340
 
 @router.post("/register_member", response_model=dict)
 async def register_member(member: Member):
@@ -171,7 +171,9 @@ async def get_member_by_id(id: str = Path(...)):
     if "_id" in member:
         member["_id"] = str(member["_id"])
     
-#     return member
+    return member
+
+
 # @router.get("/members/total-paid", response_model=dict)
 # async def get_total_amount_paid():
 #     members = list(members_collection.find())
@@ -381,7 +383,7 @@ async def register_non_member(non_member: NonMember):
         raise HTTPException(status_code=400, detail="Request with this phone/email already exists.")
     
     result = non_members_collection.insert_one(non_member.model_dump())
-    return {"message": "Non-member request submitted successfully", "request_id": str(result.inserted_id)}
+    return {"message": "Your Information is submitted successfully. Our team will contact you soon", "request_id": str(result.inserted_id)}
 
 
 @router.post("/approve_non_member/{request_id}", response_model=dict)
