@@ -409,6 +409,7 @@ async def approve_non_member(request_id: str, user=Depends(verify_token)):
 
 @router.get("/non_member_requests", response_model=dict)
 async def get_non_member_requests(user=Depends(verify_token)):
+    
     from utils.db import non_members_collection
     
     requests = []
@@ -416,4 +417,4 @@ async def get_non_member_requests(user=Depends(verify_token)):
         req["_id"] = str(req["_id"])
         requests.append(req)
     
-    return {"requests": requests}
+    return {"members": requests}
