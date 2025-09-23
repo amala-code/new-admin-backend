@@ -33,6 +33,7 @@ class MemberUpdate(BaseModel):
     amount_subscription: Optional[bool] = False
     date_of_subscription: Optional[str] = None
     transaction_id: Optional[str] = None
+    contacted:Optional[bool]=False
 
 class NonMember(BaseModel):
     name: str
@@ -40,3 +41,4 @@ class NonMember(BaseModel):
     email: EmailStr
     note: Optional[str] = None
     id: Optional[str] = None
+    contacted:Optional[bool]=False
