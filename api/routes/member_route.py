@@ -89,7 +89,8 @@ async def get_member_by_phone_body(payload: PhoneLookup = Body(...)):
     return {
         "member_id": str(member["_id"]),
         "id": member.get("id"),
-        "name": member.get("name")
+        "name": member.get("name"),
+        "amount_subscription": member.get("amount_subscription")
     }
 
 
