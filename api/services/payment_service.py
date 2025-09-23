@@ -149,7 +149,6 @@ class PaymentService:
                 return PaymentResponse(
                     payment_id=payment_details['acquirer_data']['rrn'],
                     order_id=payment_data.razorpay_order_id,
-                    rrn_no=payment_details['acquirer_data']['rrn'],
                     signature=payment_data.razorpay_signature,
                     amount=payment_details['amount'],
                     date=date,

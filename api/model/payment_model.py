@@ -15,7 +15,6 @@ class PaymentVerification(BaseModel):
 class PaymentResponse(BaseModel):
     payment_id: Optional[str] = None
     order_id: Optional[str] = None
-    rrn_no: Optional[str] = None
     signature: Optional[str] = None
     amount: Optional[int] = None
     date: Optional[str] = None
