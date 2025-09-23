@@ -123,7 +123,7 @@ class PaymentService:
                 # Payment is verified
                 # Fetch payment details
                 payment_details = client.payment.fetch(payment_data.razorpay_payment_id)
-
+                
                 # Payment Details - 
                 # {'id': 'pay_RL2KQCM5XRjimT', 'entity': 'payment', 'amount': 100, 
                 # 'currency': 'INR', 'status': 'captured', 'order_id': 'order_RL2Jg3ghkxz9ZX', 
@@ -149,6 +149,7 @@ class PaymentService:
                 return PaymentResponse(
                     payment_id=payment_details['acquirer_data']['rrn'],
                     order_id=payment_data.razorpay_order_id,
+                    rrn_no=payment_details['acquirer_data']['rrn'],
                     signature=payment_data.razorpay_signature,
                     amount=payment_details['amount'],
                     date=date,
