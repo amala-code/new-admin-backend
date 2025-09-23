@@ -8,7 +8,7 @@ payment_service = PaymentService()
 
 @router.get("/membership-amount")
 async def get_membership_amount():
-    return {"amount": 600}
+    return {"amount": 1}
 
 @router.post("/create-order")
 async def create_order(order_request: OrderRequest):
