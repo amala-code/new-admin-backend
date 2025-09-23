@@ -138,7 +138,7 @@ class PaymentService:
                 date = datetime.datetime.now().strftime("%b %d, %Y")
                 time = datetime.datetime.now().strftime("%H:%M:%S")
 
-                result = members_collection.update_one({"id": payment_data.member_id}, {"$inc": {"amount_paid_total": payment_details["amount"] / 100}, "$set": {"amount_subscription": True, "amount_paid_subscription": payment_details['amount'] / 100, "transaction_id": payment_data.razorpay_payment_id, "date_of_subscription": timestamp}})
+                result = members_collection.update_one({"id": payment_data.member_id}, {"$inc": {"amount_paid_total": payment_details["amount"] / 100}, "$set": {"amount_subscription": True, "amount_paid_subscription": payment_details['amount'] / 100, "transaction_id":payment_details['acquirer_data']['rrn'], "date_of_subscription": timestamp}})
 
                 if result.matched_count == 0:
                     raise HTTPException(status_code=404, detail=f"Member with id '{payment_data.member_id}' not found.")
