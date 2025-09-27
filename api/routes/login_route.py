@@ -4,7 +4,7 @@ from bson.objectid import ObjectId
 from api.conf import SECRET_KEY
 from api.request_model import User, UserCreate, Token
 from api.services.login_service import create_access_token, hash_password, verify_password
-from api.utils.db import users_collection, oauth2_scheme,ALGORITHM
+from api.utils.db import users_collection, oauth2_scheme,ALGORITHM,crm_collection
 
 router = APIRouter()
 
@@ -33,6 +33,40 @@ async def login(request: User):
     
     access_token = create_access_token(useremail=request.email, user_id=str(user["_id"]))
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+
+
+
+
+@router.post("/crm/signup")
+async def signup(user: UserCreate):
+    existing_user = crm_collection.find_one({"email": user.email})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    
+    hashed_password = hash_password(user.password)
+    user_data = {
+        "phone": user.phone,  # Fixed typo in key name
+        "fullname": user.fullname,
+        "email": user.email,
+        "hashed_password": hashed_password
+    }
+    
+    inserted_user = crm_collection.insert_one(user_data)
+    return {"message": "User created successfully", "user_id": str(inserted_user.inserted_id)}
+
+@router.post("/crm/login", response_model=Token)  # Changed from User to Token
+async def login(request: User):
+    user = crm_collection.find_one({"email": request.email})
+    if not user or not verify_password(request.password, user["hashed_password"]):
+        raise HTTPException(status_code=400, detail="Invalid credentials")
+    
+    access_token = create_access_token(useremail=request.email, user_id=str(user["_id"]))
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+
 
 @router.get("/protected")
 async def protected_route(token: str = Depends(oauth2_scheme)):

@@ -9,7 +9,11 @@ db = client[DB_USERNAME]
 users_collection = db.users  
 members_collection = db.members
 events_collection = db.events
-non_members_collection = db.non_members  # 👈 new collection
+non_members_collection = db.non_members 
+crm_collection = db.crm
+images_collection = db.images
+
+
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30

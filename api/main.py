@@ -7,6 +7,7 @@ import api.routes.login_route as login
 import api.routes.member_route as member 
 import api.routes.event_route as event
 import api.routes.subscription_routes as subscription
+import api.routes.photos_route as photos
 from fastapi.staticfiles import StaticFiles
 
 
@@ -18,6 +19,7 @@ version_router.include_router(login.router, tags=["login"])
 version_router.include_router(member.router, tags=["member"])
 version_router.include_router(event.router, tags=["event"])
 version_router.include_router(subscription.router, tags=["subscription"])
+version_router.include_router(photos.router, tags=["Photos"])
 app.include_router(version_router)
 
 app.add_middleware(
