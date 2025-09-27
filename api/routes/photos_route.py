@@ -1,79 +1,3 @@
-# from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
-# from typing import List
-# from bson import ObjectId
-# import shutil
-# import os
-# from api.utils.db import images_collection
-
-# router = APIRouter()
-
-# UPLOAD_DIR = "uploads"
-# os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-# # --- BULK UPLOAD IMAGES ---
-# @router.post("/images/upload_bulk")
-# async def upload_bulk_images(files: List[UploadFile] = File(...)):
-#     uploaded_files = []
-#     for file in files:
-#         file_path = os.path.join(UPLOAD_DIR, file.filename)
-#         with open(file_path, "wb") as buffer:
-#             shutil.copyfileobj(file.file, buffer)
-#         uploaded_files.append({"filename": file.filename, "path": file_path})
-
-#         # If saving to DB:
-#         images_collection.insert_one({
-#             "filename": file.filename,
-#             "path": file_path
-#         })
-
-#     return {"uploaded": uploaded_files}
-
-
-# # --- FETCH IMAGE BY ID ---
-# @router.get("/images/{image_id}")
-# async def get_image(image_id: str):
-#     image = images_collection.find_one({"_id": ObjectId(image_id)})
-#     if not image:
-#         raise HTTPException(status_code=404, detail="Image not found")
-
-#     return {
-#         "id": str(image["_id"]),
-#         "filename": image["filename"],
-#         "path": image["path"]
-#     }
-
-
-# # --- DELETE IMAGE BY ID ---
-# @router.delete("/images/{image_id}")
-# async def delete_image(image_id: str):
-#     image = images_collection.find_one({"_id": ObjectId(image_id)})
-#     if not image:
-#         raise HTTPException(status_code=404, detail="Image not found")
-
-#     # delete file from storage
-#     if os.path.exists(image["path"]):
-#         os.remove(image["path"])
-
-#     # remove from db
-#     images_collection.delete_one({"_id": ObjectId(image_id)})
-
-#     return {"message": "Image deleted successfully", "id": image_id}
-
-
-# @router.get("/images")
-# async def get_all_images():
-#     images = []
-#     for image in images_collection.find():
-#         images.append({
-#             "id": str(image["_id"]),
-#             "filename": image["filename"],
-#             "path": image["path"]
-#         })
-    
-#     if not images:
-#         raise HTTPException(status_code=404, detail="No images found")
-    
-#     return {"images": images}
 
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
@@ -96,67 +20,110 @@ IMAGES_DIR = "static/images"
 os.makedirs(STATIC_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
 
+# # --- BULK UPLOAD IMAGES ---
+# @router.post("/images/upload_bulk")
+# async def upload_bulk_images(files: List[UploadFile] = File(...)):
+#     try:
+#         uploaded_urls = []
+#         failed_uploads = []
+        
+#         for file in files:
+#             try:
+#                 # Validate file type
+#                 if not file.content_type.startswith('image/'):
+#                     failed_uploads.append({
+#                         "filename": file.filename,
+#                         "error": "Not a valid image file"
+#                     })
+#                     continue
+                
+#                 # Generate unique filename to avoid conflicts
+#                 file_extension = Path(file.filename).suffix
+#                 unique_filename = f"{uuid.uuid4()}{file_extension}"
+                
+#                 # Save to static/images/ directory (same as event route)
+#                 file_path = os.path.join(IMAGES_DIR, unique_filename)
+                
+#                 # Save file
+#                 with open(file_path, "wb") as buffer:
+#                     shutil.copyfileobj(file.file, buffer)
+                
+#                 # Create URL that matches static file serving
+#                 image_url = f"/static/images/{unique_filename}"
+                
+#                 # Save to database
+#                 result = images_collection.insert_one({
+#                     "filename": file.filename,
+#                     "unique_filename": unique_filename,
+#                     "path": file_path,
+#                     "url": image_url
+#                 })
+                
+#                 # Add URL to response (without leading slash for frontend)
+#                 uploaded_urls.append(f"static/images/{unique_filename}")
+                
+#             except Exception as e:
+#                 failed_uploads.append({
+#                     "filename": file.filename,
+#                     "error": str(e)
+#                 })
+        
+#         response_data = {
+#             "urls": uploaded_urls,
+#             "message": f"Successfully uploaded {len(uploaded_urls)} images"
+#         }
+        
+#         if failed_uploads:
+#             response_data["failed"] = failed_uploads
+        
+#         return response_data
+        
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
 # --- BULK UPLOAD IMAGES ---
 @router.post("/images/upload_bulk")
 async def upload_bulk_images(files: List[UploadFile] = File(...)):
-    try:
-        uploaded_urls = []
-        failed_uploads = []
-        
-        for file in files:
-            try:
-                # Validate file type
-                if not file.content_type.startswith('image/'):
-                    failed_uploads.append({
-                        "filename": file.filename,
-                        "error": "Not a valid image file"
-                    })
-                    continue
-                
-                # Generate unique filename to avoid conflicts
-                file_extension = Path(file.filename).suffix
-                unique_filename = f"{uuid.uuid4()}{file_extension}"
-                
-                # Save to static/images/ directory (same as event route)
-                file_path = os.path.join(IMAGES_DIR, unique_filename)
-                
-                # Save file
-                with open(file_path, "wb") as buffer:
-                    shutil.copyfileobj(file.file, buffer)
-                
-                # Create URL that matches static file serving
-                image_url = f"/static/images/{unique_filename}"
-                
-                # Save to database
-                result = images_collection.insert_one({
-                    "filename": file.filename,
-                    "unique_filename": unique_filename,
-                    "path": file_path,
-                    "url": image_url
-                })
-                
-                # Add URL to response (without leading slash for frontend)
-                uploaded_urls.append(f"static/images/{unique_filename}")
-                
-            except Exception as e:
+    uploaded_urls = []
+    failed_uploads = []
+
+    for file in files:
+        try:
+            if not file.content_type.startswith("image/"):
                 failed_uploads.append({
                     "filename": file.filename,
-                    "error": str(e)
+                    "error": "Not a valid image file"
                 })
-        
-        response_data = {
-            "urls": uploaded_urls,
-            "message": f"Successfully uploaded {len(uploaded_urls)} images"
-        }
-        
-        if failed_uploads:
-            response_data["failed"] = failed_uploads
-        
-        return response_data
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+                continue
 
+            # Generate unique filename
+            file_extension = Path(file.filename).suffix
+            unique_filename = f"{uuid.uuid4()}{file_extension}"
+            image_path = f"static/images/{unique_filename}"
+
+            # Save file (same as event route)
+            with open(image_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+
+            image_url = f"static/images/{unique_filename}"
+
+            images_collection.insert_one({
+                "filename": file.filename,
+                "unique_filename": unique_filename,
+                "path": image_path,
+                "url": image_url
+            })
+
+            uploaded_urls.append(image_url)
+
+        except Exception as e:
+            failed_uploads.append({"filename": file.filename, "error": str(e)})
+
+    return {
+        "urls": uploaded_urls,
+        "message": f"Successfully uploaded {len(uploaded_urls)} images",
+        "failed": failed_uploads
+    }
 
 # --- FETCH IMAGE BY ID ---
 @router.get("/images/{image_id}")
