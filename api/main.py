@@ -34,13 +34,12 @@ app.add_middleware(
 async def ping():
     return JSONResponse(content={"status": "success", "message": "Pong!"}, status_code=200)
 
-STATIC_DIR = "/tmp/static"
-IMAGES_DIR = "/tmp/static/images"
-os.makedirs(STATIC_DIR, exist_ok=True)
-os.makedirs(IMAGES_DIR, exist_ok=True)
+# STATIC_DIR = "/tmp/static"
+# IMAGES_DIR = "/tmp/static/images"
+# os.makedirs(STATIC_DIR, exist_ok=True)
+# os.makedirs(IMAGES_DIR, exist_ok=True)
 
-# app.mount("/static", StaticFiles(directory="static"), name="static")
-app.mount("/static", StaticFiles(directory="/tmp/static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 if __name__ == "__main__":
