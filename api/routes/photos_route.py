@@ -229,7 +229,7 @@ async def upload_bulk_images(files: List[UploadFile] = File(...)):
                 shutil.copyfileobj(file.file, buffer)
 
             # Store relative URL for serving (this will be used by your static file serving)
-            image_url = f"static/images/{unique_filename}"
+            image_url = f"/static/images/{unique_filename}"
 
             # Save to database with both paths
             images_collection.insert_one({
