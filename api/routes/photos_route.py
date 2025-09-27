@@ -349,7 +349,7 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
 
 # --- BULK UPLOAD IMAGES ---
-@router.post("/images/upload_bulk")
+@router.post("/images/upload_bulk_old")
 async def upload_bulk_images(files: List[UploadFile] = File(...)):
     uploaded_urls = []
     failed_uploads = []
@@ -398,6 +398,79 @@ async def upload_bulk_images(files: List[UploadFile] = File(...)):
     }
 
 # --- FETCH IMAGE BY ID ---
+
+
+
+
+# Update your upload functions to use consistent URLs
+
+# In your images router - update the upload function:
+@router.post("/images/upload_bulk")
+async def upload_bulk_images(files: List[UploadFile] = File(...)):
+    uploaded_urls = []
+    failed_uploads = []
+
+    for file in files:
+        try:
+            if not file.content_type.startswith("image/"):
+                failed_uploads.append({
+                    "filename": file.filename,
+                    "error": "Not a valid image file"
+                })
+                continue
+
+            # Generate unique filename
+            file_extension = Path(file.filename).suffix
+            unique_filename = f"{uuid.uuid4()}{file_extension}"
+            
+            # Save to writable directory (/tmp)
+            image_path = os.path.join(IMAGES_DIR, unique_filename)
+
+            # Save file to the writable directory
+            with open(image_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+
+            # FIXED: Use static mount path that matches your FastAPI setup
+            image_url = f"/static/images/{unique_filename}"
+
+            # Save to database
+            images_collection.insert_one({
+                "filename": file.filename,
+                "unique_filename": unique_filename,
+                "path": image_path,  # Full path where file is actually stored
+                "url": image_url,    # URL that works with static mount
+                "storage_location": "tmp"
+            })
+
+            uploaded_urls.append(image_url)
+
+        except Exception as e:
+            failed_uploads.append({"filename": file.filename, "error": str(e)})
+
+    return {
+        "urls": uploaded_urls,
+        "message": f"Successfully uploaded {len(uploaded_urls)} images",
+        "failed": failed_uploads
+    }
+
+# Update your events create function:
+# Update your get functions to return consistent URLs:
+def get_image_url(image_record):
+    """Helper function to generate consistent image URLs"""
+    image_filename = image_record.get("image", "")
+    if not image_filename:
+        return ""
+    
+    # Check if it's stored in the new location
+    if image_record.get("storage_location") == "tmp" or image_record.get("path", "").startswith("/tmp"):
+        return f"/static/images/{image_filename}"
+    else:
+        # Old images might be in a different location
+        return f"/static/images/{image_filename}"  # Assuming you've migrated them
+    
+
+
+
 @router.get("/images/{image_id}")
 async def get_image(image_id: str):
     try:

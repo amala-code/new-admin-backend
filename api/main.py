@@ -9,6 +9,7 @@ import api.routes.event_route as event
 import api.routes.subscription_routes as subscription
 import api.routes.photos_route as photos
 from fastapi.staticfiles import StaticFiles
+import os
 
 
 app = FastAPI()
@@ -33,8 +34,14 @@ app.add_middleware(
 async def ping():
     return JSONResponse(content={"status": "success", "message": "Pong!"}, status_code=200)
 
+STATIC_DIR = "/tmp/static"
+IMAGES_DIR = "/tmp/static/images"
+os.makedirs(STATIC_DIR, exist_ok=True)
+os.makedirs(IMAGES_DIR, exist_ok=True)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="/tmp/static"), name="static")
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)

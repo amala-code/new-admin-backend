@@ -219,9 +219,63 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
         return payload
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+    
+
+@router.post("/create_event")
+async def create_event(
+    title: str = Form(...),
+    description: str = Form(...),
+    date_time: str = Form(...),
+    location: str = Form(...),
+    category: str = Form(...),
+    image: UploadFile = File(...)
+):
+    try:
+        # Validate image file
+        if not image.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="File must be an image")
+        
+        # Save image to writable directory (/tmp/static/images/)
+        extension = os.path.splitext(image.filename)[1]
+        image_filename = f"{uuid4().hex}{extension}"
+        image_path = os.path.join(IMAGES_DIR, image_filename)  # This goes to /tmp/static/images/
+
+        # Save the file
+        with open(image_path, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+
+        event_data = {
+            "title": title,
+            "description": description,
+            "date_time": date_time,
+            "location": location,
+            "category": category,
+            "image": image_filename,  # Store just the filename
+            "image_path": image_path,  # Store full path for internal use
+            "image_url": f"/static/images/{image_filename}"  # URL that works with static mount
+        }
+
+        inserted_event = events_collection.insert_one(event_data)
+        return {
+            "message": "Event created successfully", 
+            "event_id": str(inserted_event.inserted_id),
+            "image_url": f"/static/images/{image_filename}"
+        }
+    
+    except Exception as e:
+        # Clean up the file if it was created but database insert failed
+        if 'image_path' in locals() and os.path.exists(image_path):
+            try:
+                os.remove(image_path)
+            except:
+                pass
+        
+        raise HTTPException(status_code=500, detail=f"Error creating event: {str(e)}")
+
+
 
 # ---------- CREATE ----------
-@router.post("/create_event")
+@router.post("/create_event/old")
 async def create_event(
     title: str = Form(...),
     description: str = Form(...),
