@@ -109,8 +109,6 @@ class PaymentService:
 
     async def verify_payment(self, payment_data: PaymentVerification):
         try:
-            breakpoint()
-
 
             # Verify signature
             generated_signature = hmac.new(
