@@ -22,20 +22,21 @@ async def get_next_member_id():
     """Get next member ID from database counter"""
     from utils.db import db
     
-    counter = db.counters.find_one_and_update(
+    # First, try to find existing counter
+    counter = db.counters.find_one({"_id": "member_id"})
+    
+    if counter is None:
+        # Initialize counter at 1345 if it doesn't exist
+        db.counters.insert_one({"_id": "member_id", "sequence_value": 1345})
+        return "1345"
+    
+    # Increment and return the counter
+    updated_counter = db.counters.find_one_and_update(
         {"_id": "member_id"},
         {"$inc": {"sequence_value": 1}},
-        return_document=True,
-        upsert=True
+        return_document=True
     )
-    # Initialize with 1345 if this is the first call
-    if counter["sequence_value"] == 1:
-        counter = db.counters.find_one_and_update(
-            {"_id": "member_id"},
-            {"$set": {"sequence_value": 1345}},
-            return_document=True
-        )
-    return str(counter["sequence_value"])
+    return str(updated_counter["sequence_value"])
 
 
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
