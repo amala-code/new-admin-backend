@@ -18,8 +18,24 @@ class PhoneLookup(BaseModel):
     phone: str
 
 
-MEMBER_ID_COUNTER = 1340
-
+async def get_next_member_id():
+    """Get next member ID from database counter"""
+    from utils.db import db
+    
+    counter = db.counters.find_one_and_update(
+        {"_id": "member_id"},
+        {"$inc": {"sequence_value": 1}},
+        return_document=True,
+        upsert=True
+    )
+    # Initialize with 1345 if this is the first call
+    if counter["sequence_value"] == 1:
+        counter = db.counters.find_one_and_update(
+            {"_id": "member_id"},
+            {"$set": {"sequence_value": 1345}},
+            return_document=True
+        )
+    return str(counter["sequence_value"])
 
 
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -39,10 +55,8 @@ async def register_member(member: Member,user=Depends(verify_token)):
     if members_collection.find_one({"$or": [{"phone": member.phone}, {"email": member.email}]}):
         raise HTTPException(status_code=400, detail="Member with this phone or email already exists.")
 
-    # Generate new ID
-    global MEMBER_ID_COUNTER
-    generated_id = str(MEMBER_ID_COUNTER)
-    MEMBER_ID_COUNTER += 1
+    # Generate new ID from database counter
+    generated_id = await get_next_member_id()
 
     member_dict = member.model_dump()
     member_dict.pop("id", None)  
@@ -59,15 +73,14 @@ async def register_member(member: Member,user=Depends(verify_token)):
     }
 
 @router.post("/register_new_user_request", response_model=dict)
-async def register_member(member: Member):
+async def register_new_user_request(member: Member):
     # Check for duplicate ID or email
     if members_collection.find_one({"$or": [{"phone": member.phone}, {"email": member.email}]}):
         raise HTTPException(status_code=400, detail="Member with this ID or email already exists.")
     
-    # Generate a new ID and make sure it's a string
-    global MEMBER_ID_COUNTER
-    member.id = str(MEMBER_ID_COUNTER)
-    MEMBER_ID_COUNTER += 1
+    # Generate a new ID from database counter
+    generated_id = await get_next_member_id()
+    member.id = generated_id
 
     # Insert into collection
     result = members_collection.insert_one(member.model_dump())
