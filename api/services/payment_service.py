@@ -109,10 +109,6 @@ class PaymentService:
 
     async def verify_payment(self, payment_data: PaymentVerification):
         try:
-            breakpoint()
-
-
-            # Verify signature
             generated_signature = hmac.new(
                 RAZORPAY_KEY_SECRET.encode('utf-8'),
                 (payment_data.razorpay_order_id + "|" + payment_data.razorpay_payment_id).encode('utf-8'),
