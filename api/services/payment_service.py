@@ -109,6 +109,8 @@ class PaymentService:
 
     async def verify_payment(self, payment_data: PaymentVerification):
         try:
+            breakpoint()
+
 
             # Verify signature
             generated_signature = hmac.new(
@@ -121,7 +123,7 @@ class PaymentService:
                 # Payment is verified
                 # Fetch payment details
                 payment_details = client.payment.fetch(payment_data.razorpay_payment_id)
-                
+
                 # Payment Details - 
                 # {'id': 'pay_RL2KQCM5XRjimT', 'entity': 'payment', 'amount': 100, 
                 # 'currency': 'INR', 'status': 'captured', 'order_id': 'order_RL2Jg3ghkxz9ZX', 
