@@ -1,5 +1,7 @@
 
 
+import datetime
+from typing import Optional
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form,Depends
 from api.utils.db import events_collection
 from bson.objectid import ObjectId
@@ -35,7 +37,9 @@ async def create_event(
     date_time: str = Form(...),
     location: str = Form(...),
     category: str = Form(...),
-    image: UploadFile = File(...)
+    image: UploadFile = File(...),
+    popup: bool = Form(False),
+    popup_end_date: Optional[datetime.date] = Form(None)  # ✅ Date only
 ):
     # Save image to a folder
     extension = os.path.splitext(image.filename)[1]
@@ -51,13 +55,32 @@ async def create_event(
         "date_time": date_time,
         "location": location,
         "category": category,
-        "image": image_filename
+        "image": image_filename,
+        "popup": popup,
+        "popup_end_date": popup_end_date
     }
+
+
 
     inserted_event = events_collection.insert_one(event_data)
     return {"message": "Event created successfully", "event_id": str(inserted_event.inserted_id)}
 
+@router.get("/popup-events")
+async def get_active_popups():
+    today = datetime.date.today()
 
+    events = list(events_collection.find({
+        "popup": True,
+        "popup_end_date": { "$gte": today }
+    }))
+
+    for event in events:
+        event["_id"] = str(event["_id"])
+
+    return {
+        "count": len(events),
+        "events": events
+    }
 # ---------- GET ALL ----------
 @router.get("/all_events")
 async def get_all_events():
@@ -70,7 +93,9 @@ async def get_all_events():
             "date_time": event["date_time"],
             "location": event["location"],
             "category": event.get("category", "Gathering"),
-            "image": event.get("image", "")
+            "image": event.get("image", ""),
+            "popup": event.get("popup", False),
+            "popup_end_date": event.get("popup_end_date")
         })
     return {"events": events}
 
@@ -134,47 +159,70 @@ async def get_events_by_category(category: str):
 
 #     return {"message": "Event updated successfully"}
 
+from typing import Optional
+from datetime import date
+from fastapi import Form, File, UploadFile, Depends, HTTPException
+from bson import ObjectId
+
 @router.put("/update_event/{event_id}")
 async def update_event(
     event_id: str,
-    title: str = Form(None),
-    description: str = Form(None),
-    date_time: str = Form(None),
-    location: str = Form(None),
-    category: str = Form(None),
-    image: UploadFile = File(None),
+    title: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    date_time: Optional[str] = Form(None),
+    location: Optional[str] = Form(None),
+    category: Optional[str] = Form(None),
+    popup: Optional[bool] = Form(None),              # ✅ Added
+    popup_end_date: Optional[date] = Form(None),     # ✅ Added (date only)
+    image: Optional[UploadFile] = File(None),
     user=Depends(verify_token),
 ):
     update_data = {}
 
     if title is not None:
         update_data["title"] = title
+
     if description is not None:
         update_data["description"] = description
+
     if date_time is not None:
         update_data["date_time"] = date_time
+
     if location is not None:
         update_data["location"] = location
+
     if category is not None:
         update_data["category"] = category
+
+    if popup is not None:
+        update_data["popup"] = popup
+
+    if popup_end_date is not None:
+        update_data["popup_end_date"] = popup_end_date
 
     if image:
         extension = os.path.splitext(image.filename)[1]
         image_filename = f"{uuid4().hex}{extension}"
         image_path = f"static/images/{image_filename}"
+
         with open(image_path, "wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
+
         update_data["image"] = image_filename
 
+    # 🚨 Prevent empty update
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields provided to update")
+
     result = events_collection.update_one(
-        {"_id": ObjectId(event_id)}, {"$set": update_data}
+        {"_id": ObjectId(event_id)},
+        {"$set": update_data}
     )
 
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Event not found")
 
     return {"message": "Event updated successfully"}
-
 
 
 # ---------- DELETE ----------
