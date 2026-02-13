@@ -14,6 +14,7 @@ IMGBB_API_KEY = os.getenv("IMGBB_API_KEY")
 MAX_IMAGES = 5
 MAX_FILE_SIZE = 4 * 1024 * 1024  # 4MB per image
 
+router = APIRouter()
 
 def compress_image(contents: bytes, max_size=(800, 800), quality=50, max_kb=200) -> bytes:
     try:
