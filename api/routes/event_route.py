@@ -1,17 +1,21 @@
 
 
+import base64
 import datetime
 from typing import Optional
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form,Depends
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form,Depends, requests
+from api.routes.photos_route import compress_image
 from api.utils.db import events_collection
 from bson.objectid import ObjectId
 import shutil
 import os
 from uuid import uuid4
-from api.conf import SECRET_KEY
+from api.conf import IMGBB_API_KEY, SECRET_KEY
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from utils.db import ALGORITHM
 import jwt
+from datetime import datetime
+import datetime
 
 security = HTTPBearer()
 
@@ -30,6 +34,42 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
 
 
 # ---------- CREATE ----------
+# @router.post("/create_event")
+# async def create_event(
+#     title: str = Form(...),
+#     description: str = Form(...),
+#     date_time: str = Form(...),
+#     location: str = Form(...),
+#     category: str = Form(...),
+#     image: UploadFile = File(...),
+#     popup: bool = Form(False),
+#     popup_end_date: Optional[datetime.date] = Form(None)  # ✅ Date only
+# ):
+#     # Save image to a folder
+#     extension = os.path.splitext(image.filename)[1]
+#     image_filename = f"{uuid4().hex}{extension}"
+#     image_path = f"static/images/{image_filename}"
+
+#     with open(image_path, "wb") as buffer:
+#         shutil.copyfileobj(image.file, buffer)
+
+#     event_data = {
+#         "title": title,
+#         "description": description,
+#         "date_time": date_time,
+#         "location": location,
+#         "category": category,
+#         "image": image_filename,
+#         "popup": popup,
+#         "popup_end_date": popup_end_date
+#     }
+
+
+
+#     inserted_event = events_collection.insert_one(event_data)
+#     return {"message": "Event created successfully", "event_id": str(inserted_event.inserted_id)}
+
+
 @router.post("/create_event")
 async def create_event(
     title: str = Form(...),
@@ -39,15 +79,21 @@ async def create_event(
     category: str = Form(...),
     image: UploadFile = File(...),
     popup: bool = Form(False),
-    popup_end_date: Optional[datetime.date] = Form(None)  # ✅ Date only
+    popup_end_date: str = Form(None)
 ):
-    # Save image to a folder
-    extension = os.path.splitext(image.filename)[1]
-    image_filename = f"{uuid4().hex}{extension}"
-    image_path = f"static/images/{image_filename}"
+    # Handle image upload
+    contents = await image.read()
+    compressed = compress_image(contents)
+    b64 = base64.b64encode(compressed).decode("utf-8")
 
-    with open(image_path, "wb") as buffer:
-        shutil.copyfileobj(image.file, buffer)
+    res = requests.post("https://api.imgbb.com/1/upload", data={
+        "key": IMGBB_API_KEY,
+        "image": b64
+    }, timeout=8)
+    result = res.json()
+
+    if not result.get("success"):
+        raise HTTPException(status_code=500, detail="Image upload failed")
 
     event_data = {
         "title": title,
@@ -55,24 +101,27 @@ async def create_event(
         "date_time": date_time,
         "location": location,
         "category": category,
-        "image": image_filename,
+        "image": result["data"]["url"],
         "popup": popup,
-        "popup_end_date": popup_end_date
     }
 
+    if popup and popup_end_date:
+        event_data["popup_end_date"] = datetime.strptime(popup_end_date, "%Y-%m-%d")
+
+    inserted = events_collection.insert_one(event_data)
+    return {"message": "Event created successfully", "event_id": str(inserted.inserted_id)}
 
 
-    inserted_event = events_collection.insert_one(event_data)
-    return {"message": "Event created successfully", "event_id": str(inserted_event.inserted_id)}
 
 @router.get("/popup-events")
 async def get_active_popups():
-    today = datetime.date.today()
+    today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
     events = list(events_collection.find({
         "popup": True,
-        "popup_end_date": { "$gte": today }
+        "popup_end_date": {"$gte": today}
     }))
+    print(events)
 
     for event in events:
         event["_id"] = str(event["_id"])
