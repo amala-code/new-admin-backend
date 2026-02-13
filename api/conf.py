@@ -6,4 +6,7 @@ DB_USERNAME=environ.get('DB_USERNAME')
 RAZORPAY_KEY_ID=environ.get('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET=environ.get('RAZORPAY_KEY_SECRET')
 client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+IMGBB_API_KEY=environ.get('IMGBB_API_KEY')
+
+
 

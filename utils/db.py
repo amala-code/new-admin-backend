@@ -3,7 +3,7 @@ from passlib.context import CryptContext
 from pymongo import MongoClient
 from api.conf import DB_PASSWORD,DB_USERNAME
 
-MONGO_URI = f"mongodb+srv://{DB_USERNAME}:{DB_PASSWORD}@cluster0.is3v706.mongodb.net/?retryWrites=true&w=majority&routerName=Cluster0"
+MONGO_URI = f"mongodb+srv://{DB_USERNAME}:{DB_PASSWORD}@cluster0.is3v706.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(MONGO_URI)
 db = client[DB_USERNAME]  
 users_collection = db.users  
